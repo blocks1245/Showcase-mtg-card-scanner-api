@@ -1,15 +1,15 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { AppService } from './app.service';
-import { getCardBySetCodeAndNumber } from '../db/db-helper';
+import {
+  getCardBySetCodeAndNumber,
+  getScannedCards,
+  getCardByUUID,
+  getScannedCardByName,
+} from '../db/db-helper';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
 
   @Get('card')
   async getCardBySetcodeAndNumber(
@@ -26,8 +26,31 @@ export class AppController {
     const secondLine = lines[1]?.trim();
 
     const number = firstLine.split('/')[0].replace(/^0+/, '');
-    const setcode = secondLine?.split(' ')[0];
+    const setcode = secondLine?.substring(0, 3);
 
     return await getCardBySetCodeAndNumber(setcode, number);
+  }
+
+  @Get('card/:uuid')
+  async getCardByUUID(@Param('uuid') uuid: string) {
+    const card = await getCardByUUID(uuid);
+    if (!card) {
+      return { error: 'Card not found' };
+    }
+    return card;
+  }
+
+  @Get('scanned')
+  async getScannedCards() {
+    return await getScannedCards();
+  }
+
+  @Get('scanned/:name')
+  async getScannedCardByName(@Param('name') name: string) {
+    const card = await getScannedCardByName(name);
+    if (!card) {
+      return { error: 'Scanned card not found' };
+    }
+    return card;
   }
 }

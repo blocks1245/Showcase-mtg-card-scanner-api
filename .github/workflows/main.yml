@@ -10,6 +10,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+      - uses: montudor/action-zip@v1
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -21,20 +22,15 @@ jobs:
 
       - name: Build project
         run: npm run build
-        
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
 
-      - name: Deploy to AWS Lambda using Serverless Framework
-        run: npx serverless deploy --stage prod
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+
+      - name: zip
+        run: cd dist && zip -r code.zip .
+
+      - name: AWS CLI
+        uses: imehedi/actions-awscli-v2@latest
+        with:
+          args: "lambda update-function-code \
+          --function-name arn:aws:lambda:us-east-1:111452723358:function:showcaseAPI \
+          --zip-file fileb://dist/code.zip"
           

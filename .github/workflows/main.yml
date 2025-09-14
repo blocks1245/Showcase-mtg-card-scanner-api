@@ -49,16 +49,17 @@ jobs:
 
           # Create .env file with DB secrets
           cat > .env <<EOT
-          DB_HOST=$DB_HOST
-          DB_USER=$DB_USER
-          DB_PASSWORD=$DB_PASSWORD
-          DB_PORT=$DB_PORT
-          DB_NAME=$DB_NAME
-          EOT
+        DB_HOST=$DB_HOST
+        DB_USER=$DB_USER
+        DB_PASSWORD=$DB_PASSWORD
+        DB_PORT=$DB_PORT
+        DB_NAME=$DB_NAME
+        EOT
 
           cd \"\$REPO_DIR\"
           npm install
 
           echo 'Starting/restarting application...'
-          npm run build || npm run start:prod
+          npm run build
+          npm run start:prod
         "

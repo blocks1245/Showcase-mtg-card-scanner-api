@@ -1,47 +1,65 @@
-name: Deploy Lambda Function
+name: Deploy to EC2
 
 on:
   push:
-    branches: [master]
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v5
-      - uses: montudor/action-zip@v1
+    - uses: actions/checkout@v2
+    
+    - name: Deploy to EC2
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+        HOST: ${{ secrets.EC2_HOST }}
+        USER: ${{ secrets.EC2_USER }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+      run: |
+        echo "$PRIVATE_KEY" > github-ec2.pem && chmod 600 github-ec2.pem
+        ssh -o StrictHostKeyChecking=no -i github-ec2.pem ${USER}@${HOST} '
+        echo "Current directory: $(pwd)"
+        echo "Listing home directory:"
+        ls -la ~
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        echo "Installing Node.js..."
+        if ! command -v nvm &> /dev/null; then
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+        fi
+        nvm install node
 
-      - name: Install dependencies
-        run: npm install
+        REPO_URL="https://github.com/blocks1245/Showcase-mtg-card-scanner-api.git"
+        BRANCH="master"
+        REPO_DIR="$HOME/Showcase-mtg-card-scanner-api"
 
-      - name: Build project
-        run: npm run build
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+        if [ -d "$REPO_DIR/.git" ]; then
+          cd "$REPO_DIR"
+          git pull origin "$BRANCH"
+        else
+          git clone "$REPO_URL" "$REPO_DIR"
+          cd "$REPO_DIR"
+        fi
 
+        # Create .env file with DB secrets
+        cat > .env <<EOF
+        DB_HOST=${DB_HOST}
+        DB_USER=${DB_USER}
+        DB_PASSWORD=${DB_PASSWORD}
+        DB_PORT=${DB_PORT}
+        DB_NAME=${DB_NAME}
+        EOF
 
-      - name: zip
-        run: cd dist && zip -r code.zip .
+        cd "$REPO_DIR"
+        git pull origin main
+        npm install
 
-      - name: AWS CLI
-        uses: imehedi/actions-awscli-v2@latest
-        with:
-          args: "lambda update-function-code \
-          --function-name arn:aws:lambda:us-east-1:111452723358:function:showcaseAPI \
-          --zip-file fileb://dist/code.zip"
-
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-          
+        echo "Starting/restarting application..."
+        npm run build || npm run start:prod
+        '

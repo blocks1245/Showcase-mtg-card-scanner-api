@@ -57,7 +57,7 @@ jobs:
         EOF
 
         cd "$REPO_DIR"
-        git pull origin main
+        git pull origin master
         npm install
 
         echo "Starting/restarting application..."

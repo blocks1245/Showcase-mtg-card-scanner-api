@@ -19,6 +19,9 @@ export class AppController {
     @Query('setcode') setcode: string,
     @Query('number') number: string,
   ) {
+    if (!setcode || !number) {
+      throw new BadRequestException('Missing setcode or number query parameter.');
+    }
     return await getCardBySetCodeAndNumber(setcode, number.replace(/^0+/, ''));
   }
 

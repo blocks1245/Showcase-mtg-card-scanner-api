@@ -56,10 +56,12 @@ jobs:
         DB_NAME=$DB_NAME
         EOT
 
-          cd \"\$REPO_DIR\"
+          cd "$REPO_DIR"
           npm install
-
-          echo 'Starting/restarting application...'
           npm run build
-          npm run start:prod
+
+          echo 'Starting/restarting application with PM2...'
+          pm2 delete showcase-api || true
+          pm2 start npm --name showcase-api -- run start:prod
+          pm2 save
         "

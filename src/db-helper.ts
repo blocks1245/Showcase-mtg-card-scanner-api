@@ -37,7 +37,7 @@ export async function addCardToScanned(uuid: string): Promise<void> {
     const card = await getCardByUUID(uuid);
 
     const name = card ? card.name : 'Unknown Card';
-    const setCode = card ? card.setCode : 'Unknown Set';
+    const setCode = card ? card.setcode : 'Unknown Set';
     const number = card ? card.number : 'Unknown Number';
 
     const query = 'INSERT INTO scanned (uuid, name, setcode, number) VALUES ($1, $2, $3, $4)';
@@ -46,6 +46,7 @@ export async function addCardToScanned(uuid: string): Promise<void> {
 
 export async function getScannedCards(): Promise<any[]> {
     const query = 'SELECT * FROM scanned';
+    console.log('Fetching scanned cards:', await queryAll(query, []));
     return queryAll(query, []);
 }
 

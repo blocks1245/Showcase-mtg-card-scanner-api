@@ -24,7 +24,7 @@ async function queryAll(query: string, params: any[]) {
 }
 
 export function getCardBySetCodeAndNumber(setCode: string, number: string): Promise<any> {
-    const query = 'SELECT * FROM cards WHERE setCode = $1 AND number = $2';
+    const query = 'SELECT * FROM cards WHERE setcode = $1 AND number = $2';
     return queryOne(query, [setCode, number]);
 }
 
@@ -40,18 +40,18 @@ export async function addCardToScanned(uuid: string): Promise<void> {
     const setCode = card ? card.setCode : 'Unknown Set';
     const number = card ? card.number : 'Unknown Number';
 
-    const query = 'INSERT INTO scanned (uuid, name, setCode, number) VALUES ($1, $2, $3, $4)';
+    const query = 'INSERT INTO scanned (uuid, name, setcode, number) VALUES ($1, $2, $3, $4)';
     await pool.query(query, [uuid, name, setCode, number]);
 }
 
-export function getScannedCards(): Promise<any[]> {
+export async function getScannedCards(): Promise<any[]> {
     const query = 'SELECT * FROM scanned';
     return queryAll(query, []);
 }
 
 export function getScannedCardByName(name: string): Promise<any[]> {
     const query = `
-        SELECT name, setCode, number, POSITION(LOWER($1) IN LOWER(name)) AS relevance
+        SELECT name, setcode, number, POSITION(LOWER($1) IN LOWER(name)) AS relevance
         FROM scanned
         WHERE LOWER(name) LIKE '%' || LOWER($1) || '%'
         ORDER BY relevance ASC, LENGTH(name) ASC
@@ -61,7 +61,7 @@ export function getScannedCardByName(name: string): Promise<any[]> {
 
 export function getCardByName(name: string): Promise<any[]> {
     const query = `
-        SELECT name, setCode, number, POSITION(LOWER($1) IN LOWER(name)) AS relevance
+        SELECT name, setcode, number, POSITION(LOWER($1) IN LOWER(name)) AS relevance
         FROM cards
         WHERE LOWER(name) LIKE '%' || LOWER($1) || '%'
         ORDER BY relevance ASC, LENGTH(name) ASC

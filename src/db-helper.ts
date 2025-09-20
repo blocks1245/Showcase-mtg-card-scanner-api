@@ -46,7 +46,6 @@ export async function addCardToScanned(uuid: string): Promise<void> {
 
 export async function getScannedCards(): Promise<any[]> {
     const query = 'SELECT * FROM scanned';
-    console.log('Fetching scanned cards:', await queryAll(query, []));
     return queryAll(query, []);
 }
 

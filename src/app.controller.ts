@@ -53,17 +53,27 @@ export class AppController {
 
     if (setcode && number) {
       const card = await getCardBySetCodeAndNumber(setcode, number);
-      if (card) {
-        await addCardToScanned(card.uuid);
-
-        this.notificationsGateway.notifyCardAdded(card);
-
-        return card;
-      } else {
-        throw new BadRequestException('Card not found in database.');
-      }
+      return card;
     } 
     return { error: 'Invalid card data format' }
+  }
+
+  @Post('card/uuid/:uuid')
+  @HttpCode(200)
+  async postCardByUUID(@Body() body: { uuid: string }) {
+    const { uuid } = body;
+    if (!uuid) {
+      throw new BadRequestException('Missing uuid in request body.');
+    }
+    const card = await getCardByUUID(uuid);
+    if (card) {
+      await addCardToScanned(card.uuid);
+
+      this.notificationsGateway.notifyCardAdded(card);
+
+    } else {
+      throw new BadRequestException('Card not found in database.');
+    }
   }
 
 

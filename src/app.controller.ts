@@ -60,8 +60,7 @@ export class AppController {
 
   @Post('card/uuid/:uuid')
   @HttpCode(200)
-  async postCardByUUID(@Body() body: { uuid: string }) {
-    const { uuid } = body;
+  async postCardByUUID(@Param('uuid') uuid: string) {
     if (!uuid) {
       throw new BadRequestException('Missing uuid in request body.');
     }
